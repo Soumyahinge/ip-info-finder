@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud IP Address Info Finder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 650px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .cloud-badge {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .cloud-badge span {
+            background: #e0e7ff;
+            color: #4f46e5;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result {
+            display: none;
+            margin-top: 25px;
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .result-header h3 {
+            color: #333;
+            word-break: break-all;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .info-item {
+            background: white;
+            padding: 12px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #888;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            word-break: break-word;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            font-size: 12px;
+            color: #888;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 25px;
+            }
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            .input-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="cloud-badge">
+            <span>☁️ CLOUD-BASED SERVICE ☁️</span>
+        </div>
+        
+        <h1>🌐 IP Address Info Finder</h1>
+        <div class="subtitle">Powered by ipinfo.io Cloud API • Global IP Geolocation</div>
+        
+        <div class="input-group">
+            <input type="text" id="ipInput" placeholder="Enter IP address (e.g., 8.8.8.8) or leave empty for your IP">
+            <button id="lookupBtn">🔍 Lookup IP</button>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Contacting cloud API server...</p>
+        </div>
+        
+        <div class="result" id="result">
+            <!-- Result will appear here -->
+        </div>
+        
+        <div class="footer">
+            <p>📡 Data provided by ipinfo.io • Cloud-based IP geolocation service</p>
+            <p>⚡ Free tier: 50,000 requests/month</p>
+        </div>
+    </div>
+
+    <script>
+        // USING ipinfo.io - Works perfectly with HTTPS and GitHub Pages
+        // No API key needed for basic usage!
+        
+        async function getIPInfo(ip = '') {
+            let url;
+            if (ip && ip.trim() !== '') {
+                // For specific IP lookup
+                url = `https://ipinfo.io/${encodeURIComponent(ip.trim())}/json`;
+            } else {
+                // For current user's IP
+                url = 'https://ipinfo.io/json';
+            }
+            
+            console.log('Fetching from:', url);
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                throw new Error(`API returned ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log('API Response:', data);
+            
+            return data;
+        }
+        
+        async function lookupIP() {
+            const ipInput = document.getElementById('ipInput');
+            const loadingDiv = document.getElementById('loading');
+            const resultDiv = document.getElementById('result');
+            const lookupBtn = document.getElementById('lookupBtn');
+            
+            const ip = ipInput.value;
+            
+            // Show loading
+            loadingDiv.style.display = 'block';
+            resultDiv.style.display = 'none';
+            lookupBtn.disabled = true;
+            
+            try {
+                const data = await getIPInfo(ip);
+                
+                // Check if we got valid data
+                if (data.error || !data.ip) {
+                    throw new Error(data.error || 'Invalid IP address');
+                }
+                
+                // Parse location data (format: "37.3860,-122.0838")
+                let lat = '', lon = '';
+                if (data.loc) {
+                    const coords = data.loc.split(',');
+                    lat = coords[0];
+                    lon = coords[1];
+                }
+                
+                // Display the results
+                resultDiv.innerHTML = `
+                    <div class="result-card">
+                        <div class="result-header">
+                            <h3>📍 IP: ${data.ip}</h3>
+                            <span class="status-badge">✓ Success</span>
+                        </div>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-label">🌍 Country</div>
+                                <div class="info-value">${data.country || 'N/A'}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">🏙️ Region</div>
+                                <div class="info-value">${data.region || 'N/A'}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">🏢 City</div>
+                                <div class="info-value">${data.city || 'N/A'}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">📮 Postal Code</div>
+                                <div class="info-value">${data.postal || 'N/A'}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">📍 Coordinates</div>
+                                <div class="info-value">${lat ? `${lat}, ${lon}` : 'N/A'}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">🕒 Timezone</div>
+                                <div class="info-value">${data.timezone || 'N/A'}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">📡 ISP / Organization</div>
+                                <div class="info-value">${data.org || 'N/A'}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">📍 Location</div>
+                                <div class="info-value">${data.city ? `${data.city}, ${data.country}` : data.country || 'N/A'}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                resultDiv.style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="error-message">
+                        <strong>❌ Error</strong><br>
+                        ${error.message || 'Unable to fetch IP information. Please try again.'}
+                    </div>
+                `;
+                resultDiv.style.display = 'block';
+            } finally {
+                loadingDiv.style.display = 'none';
+                lookupBtn.disabled = false;
+            }
+        }
+        
+        // Auto-lookup user's IP on page load
+        window.addEventListener('load', () => {
+            setTimeout(lookupIP, 100);
+        });
+        
+        // Add event listeners
+        document.getElementById('lookupBtn').addEventListener('click', lookupIP);
+        document.getElementById('ipInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') lookupIP();
+        });
+    </script>
+</body>
+</html>
